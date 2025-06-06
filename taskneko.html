@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Neko</title>
+    <title>Task Neko v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,43 +13,20 @@
             font-family: 'Nunito', sans-serif;
             background-color: #f0f9ff;
         }
-        /* Custom animation for wings */
+        /* Wing animation */
         @keyframes flap {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(15deg); }
+            0%, 100% { transform: rotate(5deg); }
+            50% { transform: rotate(-10deg); }
         }
         .wing-flap {
-            animation: flap 0.5s ease-in-out infinite;
+            animation: flap 0.6s ease-in-out infinite alternate;
         }
-        /* Transition for progress bar */
-        #sparkle-progress {
+        #xp-progress {
             transition: width 0.5s ease-in-out;
         }
-        /* Task item styling */
-        .task-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: white;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 0.5rem;
-            transition: all 0.2s ease;
-        }
-        .task-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-        }
-        /* Custom button styles */
         .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 700;
-            color: white;
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
+            padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 700; color: white;
+            transition: all 0.2s ease; border: none; cursor: pointer;
         }
         .btn-primary {
             background: linear-gradient(to right, #818cf8, #6366f1);
@@ -59,17 +36,19 @@
             transform: translateY(-1px);
             box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-         .btn-complete {
-            background-color: #22c55e; /* green-500 */
+        .tab-button {
+            padding: 0.5rem 1rem; font-weight: 700; border-radius: 0.5rem;
+            cursor: pointer; transition: all 0.2s ease;
         }
-        .btn-complete:hover {
-            background-color: #16a34a;
+        .tab-button.active {
+            background-color: #6366f1; color: white;
         }
-        .btn-delete {
-            background-color: #ef4444; /* red-500 */
+        .tab-button:not(.active) {
+            background-color: #e0e7ff; color: #4338ca;
         }
-        .btn-delete:hover {
-            background-color: #dc2626;
+        /* Custom modal for level up */
+        #level-up-modal {
+            transition: opacity 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -78,54 +57,43 @@
     <div class="container mx-auto p-4 md:p-8 max-w-6xl">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-indigo-600">Task Neko</h1>
-            <p class="text-slate-500 mt-2">Complete tasks to make your Neko happy and sparkly!</p>
+            <p class="text-slate-500 mt-2">Level up your Neko by completing tasks!</p>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Panel: The Pet -->
             <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center">
+                <div class="w-full flex justify-between items-center mb-4">
+                    <div id="level-display" class="font-bold text-xl text-indigo-600">Level: 1</div>
+                    <div id="sparkle-points-display" class="font-bold text-xl text-amber-500">✨ 0</div>
+                </div>
                 <div id="pet-container" class="w-64 h-64 md:w-80 md:h-80 relative">
-                    <!-- The SVG for the pet is drawn here -->
                     <svg id="task-neko-svg" viewBox="0 0 200 200" class="w-full h-full">
-                        <!-- Wings (separate for animation) -->
-                        <g id="left-wing" style="transform-origin: 100px 100px;">
-                            <path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/>
-                            <circle cx="70" cy="90" r="5" fill="#fde047"/>
-                            <circle cx="50" cy="70" r="6" fill="#60a5fa"/>
-                            <circle cx="80" cy="60" r="4" fill="#f472b6"/>
+                        <g id="wings-container">
+                            <!-- Wings will be inserted here by JS -->
                         </g>
-                        <g id="right-wing" style="transform-origin: 100px 100px;">
-                             <path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/>
-                             <circle cx="130" cy="90" r="5" fill="#fde047"/>
-                             <circle cx="150" cy="70" r="6" fill="#60a5fa"/>
-                             <circle cx="120" cy="60" r="4" fill="#f472b6"/>
+                        <g id="body-container">
+                            <path id="neko-tail" d="M100,160 Q 120,170 130,150 Q 140,130 110,140 Q 80,150 90,170" stroke-width="4" fill="none" stroke-linecap="round" />
+                            <path id="neko-body" d="M70,100 a 30,40 0 1,1 60,0 v 30 a 30,30 0 0,1 -60,0 z" />
+                            <path d="M75,120 Q 100,125 125,120" stroke="#a78bfa" stroke-width="6" fill="none" />
+                            <path d="M78,130 Q 100,135 122,130" stroke="#fef08a" stroke-width="6" fill="none" />
+                            <circle id="neko-head" cx="100" cy="80" r="30" />
+                            <path d="M90,60 C 85,50 95,50 90,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
+                            <path d="M110,60 C 105,50 115,50 110,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
+                            <circle cx="90" cy="80" r="4" fill="black"/>
+                            <circle cx="110" cy="80" r="4" fill="black"/>
+                            <path d="M95,90 Q 100,95 105,90" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                            <path d="M98,95 C 98,92 102,92 102,95 L 100,100 Z" fill="#f08080"/>
+                            <circle id="neko-paw-1" cx="70" cy="115" r="8" />
+                            <circle id="neko-paw-2" cx="130" cy="115" r="8" />
                         </g>
-                        <!-- Body -->
-                        <path d="M70,100 a 30,40 0 1,1 60,0 v 30 a 30,30 0 0,1 -60,0 z" fill="#c4b5fd"/>
-                        <!-- Stripes -->
-                        <path d="M75,120 Q 100,125 125,120" stroke="#a78bfa" stroke-width="6" fill="none" />
-                        <path d="M78,130 Q 100,135 122,130" stroke="#fef08a" stroke-width="6" fill="none" />
-                        <!-- Head -->
-                        <circle cx="100" cy="80" r="30" fill="#c4b5fd"/>
-                        <path d="M90,60 C 85,50 95,50 90,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
-                        <path d="M110,60 C 105,50 115,50 110,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
-                        <!-- Face -->
-                        <circle cx="90" cy="80" r="4" fill="black"/>
-                        <circle cx="110" cy="80" r="4" fill="black"/>
-                        <path d="M95,90 Q 100,95 105,90" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-                        <path d="M98,95 C 98,92 102,92 102,95 L 100,100 Z" fill="#f08080"/>
-                        <!-- Paws -->
-                        <circle cx="70" cy="115" r="8" fill="#ddd6fe"/>
-                        <circle cx="130" cy="115" r="8" fill="#ddd6fe"/>
-                        <!-- Tail -->
-                        <path d="M100,160 Q 120,170 130,150 Q 140,130 110,140 Q 80,150 90,170" stroke="#a78bfa" stroke-width="4" fill="none" stroke-linecap="round" />
                     </svg>
                 </div>
                 <div class="w-full mt-4 text-center">
-                    <p id="pet-status" class="font-bold text-lg text-indigo-500 mb-2">Task Neko is waiting for you!</p>
+                    <p class="font-bold text-sm text-slate-500 mb-1">XP</p>
                     <div class="w-full bg-slate-200 rounded-full h-6">
-                        <div id="sparkle-progress" class="bg-gradient-to-r from-yellow-300 to-orange-400 h-6 rounded-full text-xs font-bold text-orange-800 text-center leading-6" style="width: 50%">
-                           <span id="sparkle-points">50</span>/100 Sparkle
+                        <div id="xp-progress" class="bg-gradient-to-r from-sky-400 to-blue-500 h-6 rounded-full text-xs font-bold text-white text-center leading-6" style="width: 0%">
+                           <span id="xp-display">0/100</span>
                         </div>
                     </div>
                 </div>
@@ -133,186 +101,267 @@
 
             <!-- Right Panel: The Productivity App -->
             <div class="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-4">My Tasks</h2>
-                <form id="add-task-form" class="flex gap-2 mb-4">
-                    <input type="text" id="task-input" placeholder="Add a new productive task..." class="flex-grow p-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition">
-                    <button type="submit" class="btn btn-primary">Add</button>
-                </form>
+                <div class="flex border-b-2 border-slate-200 mb-4">
+                    <button id="tab-tasks" class="tab-button active" onclick="showTab('tasks')">Tasks</button>
+                    <button id="tab-shop" class="tab-button" onclick="showTab('shop')">Shop</button>
+                </div>
 
-                <div id="task-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
-                    <!-- Tasks will be dynamically inserted here -->
+                <div id="tasks-content">
+                    <form id="add-task-form" class="flex gap-2 mb-4">
+                        <input type="text" id="task-input" placeholder="Add a task for XP & Sparkles..." class="flex-grow p-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </form>
+                    <div id="task-list" class="space-y-2 max-h-80 overflow-y-auto pr-2"></div>
+                </div>
+
+                <div id="shop-content" class="hidden">
+                    <h2 class="text-2xl font-bold mb-4">Neko Customizations</h2>
+                    <div id="shop-items" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Level Up Modal -->
+    <div id="level-up-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 text-center transform scale-95 transition-transform duration-300">
+            <h2 class="text-3xl font-bold text-yellow-500">LEVEL UP!</h2>
+            <p class="text-slate-600 mt-2">Your Neko reached <span id="new-level" class="font-bold text-indigo-600"></span>!</p>
+            <p class="mt-4">You earned a bonus <span class="font-bold text-amber-500">✨ 50 Sparkle Points!</span></p>
+            <button onclick="closeModal()" class="btn btn-primary mt-6">Awesome!</button>
+        </div>
+    </div>
+
 
     <script>
         // --- DOM Elements ---
         const taskForm = document.getElementById('add-task-form');
         const taskInput = document.getElementById('task-input');
         const taskList = document.getElementById('task-list');
-        const petStatus = document.getElementById('pet-status');
-        const sparkleProgress = document.getElementById('sparkle-progress');
-        const sparklePointsDisplay = document.getElementById('sparkle-points');
-        const leftWing = document.getElementById('left-wing');
-        const rightWing = document.getElementById('right-wing');
+        const levelDisplay = document.getElementById('level-display');
+        const sparklePointsDisplay = document.getElementById('sparkle-points-display');
+        const xpProgress = document.getElementById('xp-progress');
+        const xpDisplay = document.getElementById('xp-display');
+        const levelUpModal = document.getElementById('level-up-modal');
 
         // --- Game State ---
         let state = {
             tasks: [],
-            sparklePoints: 50
+            level: 1,
+            xp: 0,
+            xpToNextLevel: 100,
+            sparklePoints: 0,
+            customizations: {
+                bodyColor: '#c4b5fd',
+                wingStyle: 'default',
+            },
+            ownedItems: ['default-color', 'default-wings']
         };
 
-        const PET_MESSAGES = {
-            happy: "Woohoo! I'm full of energy!",
-            content: "Feeling productive and content.",
-            neutral: "Let's get some tasks done!",
-            sad: "Feeling a bit sluggish...",
-            verySad: "My wings feel heavy... I need some sparkle."
+        const WING_STYLES = {
+            'default': `<g id="default-wings" class="wing-flap" style="transform-origin: 100px 90px;">
+                            <path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="70" cy="90" r="5" fill="#fde047"/><circle cx="50" cy="70" r="6" fill="#60a5fa"/><circle cx="80" cy="60" r="4" fill="#f472b6"/>
+                            <path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="130" cy="90" r="5" fill="#fde047"/><circle cx="150" cy="70" r="6" fill="#60a5fa"/><circle cx="120" cy="60" r="4" fill="#f472b6"/>
+                        </g>`,
+            'butterfly': `<g id="butterfly-wings" class="wing-flap" style="transform-origin: 100px 90px;">
+                            <path d="M95,85 a 40,40 0 0 1 -50,-35 a 30,30 0 0 1 50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
+                            <path d="M105,85 a 40,40 0 0 0 50,-35 a 30,30 0 0 0 -50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
+                        </g>`,
+            'dragon': `<g id="dragon-wings" class="wing-flap" style="transform-origin: 100px 90px;">
+                           <path d="M95,85 L 50,50 L 80,90 L 50,90 L 95,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/>
+                           <path d="M105,85 L 150,50 L 120,90 L 150,90 L 105,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/>
+                       </g>`
         };
+
+        const SHOP_ITEMS = [
+            { id: 'default-color', name: 'Default Purple', price: 0, type: 'color', value: '#c4b5fd' },
+            { id: 'sky-blue', name: 'Sky Blue', price: 100, type: 'color', value: '#7dd3fc' },
+            { id: 'sunny-yellow', name: 'Sunny Yellow', price: 100, type: 'color', value: '#fde047' },
+            { id: 'mint-green', name: 'Mint Green', price: 150, type: 'color', value: '#a7f3d0' },
+            { id: 'default-wings', name: 'Default Wings', price: 0, type: 'wings', value: 'default' },
+            { id: 'butterfly-wings', name: 'Butterfly Wings', price: 250, type: 'wings', value: 'butterfly' },
+            { id: 'dragon-wings', name: 'Dragon Wings', price: 500, type: 'wings', value: 'dragon' },
+        ];
+
 
         // --- Functions ---
 
-        /**
-         * Loads state from localStorage on startup.
-         */
         function loadState() {
-            const savedState = localStorage.getItem('taskNekoState');
+            const savedState = localStorage.getItem('taskNekoStateV2');
             if (savedState) {
                 state = JSON.parse(savedState);
             }
         }
 
-        /**
-         * Saves the current state to localStorage.
-         */
         function saveState() {
-            localStorage.setItem('taskNekoState', JSON.stringify(state));
-        }
-
-        /**
-         * Renders the tasks in the DOM.
-         */
-        function renderTasks() {
-            taskList.innerHTML = ''; // Clear current list
-            if (state.tasks.length === 0) {
-                taskList.innerHTML = `<p class="text-slate-400 text-center p-4">No tasks yet. Add one above!</p>`;
-            } else {
-                state.tasks.forEach((task, index) => {
-                    const taskElement = document.createElement('div');
-                    taskElement.className = 'task-item';
-                    taskElement.innerHTML = `
-                        <span class="flex-grow">${task.text}</span>
-                        <div class="flex gap-2 ml-2">
-                            <button class="btn btn-sm btn-complete" onclick="completeTask(${index})">✓</button>
-                            <button class="btn btn-sm btn-delete" onclick="deleteTask(${index})">✗</button>
-                        </div>
-                    `;
-                    taskList.appendChild(taskElement);
-                });
-            }
-        }
-
-        /**
-         * Updates the pet's appearance and status message based on sparkle points.
-         */
-        function updatePetState() {
-            // Clamp points between 0 and 100
-            state.sparklePoints = Math.max(0, Math.min(100, state.sparklePoints));
-            
-            sparklePointsDisplay.textContent = state.sparklePoints;
-            sparkleProgress.style.width = `${state.sparklePoints}%`;
-
-            let statusMessage = PET_MESSAGES.neutral;
-            leftWing.classList.remove('wing-flap');
-            rightWing.classList.remove('wing-flap');
-            document.getElementById('task-neko-svg').style.transform = 'translateY(0)';
-
-
-            if (state.sparklePoints >= 80) {
-                statusMessage = PET_MESSAGES.happy;
-                leftWing.classList.add('wing-flap');
-                rightWing.classList.add('wing-flap');
-                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
-                sparkleProgress.classList.add('bg-gradient-to-r', 'from-green-400', 'to-teal-400');
-            } else if (state.sparklePoints >= 50) {
-                statusMessage = PET_MESSAGES.content;
-                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
-                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-green-400', 'to-teal-400');
-                sparkleProgress.classList.add('bg-gradient-to-r', 'from-yellow-300', 'to-orange-400');
-            } else if (state.sparklePoints >= 20) {
-                statusMessage = PET_MESSAGES.sad;
-                sparkleProgress.classList.add('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
-            } else {
-                statusMessage = PET_MESSAGES.verySad;
-                sparkleProgress.classList.add('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
-                document.getElementById('task-neko-svg').style.transform = 'translateY(10px)';
-            }
-
-            petStatus.textContent = statusMessage;
-        }
-
-        /**
-         * Adds a new task.
-         */
-        function addTask(event) {
-            event.preventDefault();
-            const taskText = taskInput.value.trim();
-            if (taskText === '') {
-                alert("Please enter a task!"); // You can replace this with a nicer modal
-                return;
-            }
-            state.tasks.push({ text: taskText, completed: false });
-            taskInput.value = '';
-
-            // Adding a task slightly decreases sparkle, encouraging completion.
-            state.sparklePoints -= 2;
-
-            rerender();
-        }
-
-        /**
-         * Marks a task as complete.
-         */
-        window.completeTask = function(index) {
-            state.tasks.splice(index, 1); // Remove task from array
-            state.sparklePoints += 15; // Reward user
-            rerender();
-        }
-
-        /**
-         * Deletes a task.
-         */
-        window.deleteTask = function(index) {
-            state.tasks.splice(index, 1);
-            // No penalty or reward for just deleting.
-            rerender();
+            localStorage.setItem('taskNekoStateV2', JSON.stringify(state));
         }
         
-        /**
-         * Central function to update everything.
-         */
         function rerender() {
             renderTasks();
-            updatePetState();
+            renderPet();
+            renderUI();
             saveState();
         }
 
+        function renderTasks() {
+            taskList.innerHTML = '';
+            if (state.tasks.length === 0) {
+                taskList.innerHTML = `<p class="text-slate-400 text-center p-4">No tasks yet. Add one for XP!</p>`;
+                return;
+            }
+            state.tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'p-3 bg-slate-50 rounded-lg flex justify-between items-center';
+                taskElement.innerHTML = `
+                    <span>${task.text}</span>
+                    <div>
+                        <button class="btn btn-sm bg-green-500 hover:bg-green-600" onclick="completeTask(${index})">✓</button>
+                    </div>
+                `;
+                taskList.appendChild(taskElement);
+            });
+        }
+        
+        function renderPet() {
+            const { bodyColor, wingStyle } = state.customizations;
+            // Apply body color
+            document.getElementById('neko-body').style.fill = bodyColor;
+            document.getElementById('neko-head').style.fill = bodyColor;
+            document.getElementById('neko-tail').style.stroke = bodyColor;
+            document.getElementById('neko-paw-1').style.fill = tinycolor(bodyColor).lighten(10).toString();
+            document.getElementById('neko-paw-2').style.fill = tinycolor(bodyColor).lighten(10).toString();
+            // Apply wing style
+            document.getElementById('wings-container').innerHTML = WING_STYLES[wingStyle] || WING_STYLES['default'];
+        }
 
-        // --- Event Listeners ---
-        taskForm.addEventListener('submit', addTask);
+        function renderUI() {
+            levelDisplay.textContent = `Level: ${state.level}`;
+            sparklePointsDisplay.textContent = `✨ ${state.sparklePoints}`;
+            xpDisplay.textContent = `${state.xp}/${state.xpToNextLevel}`;
+            xpProgress.style.width = `${(state.xp / state.xpToNextLevel) * 100}%`;
+        }
+
+        function addTask(event) {
+            event.preventDefault();
+            const taskText = taskInput.value.trim();
+            if (taskText === '') return;
+            state.tasks.push({ text: taskText });
+            taskInput.value = '';
+            rerender();
+        }
+
+        window.completeTask = function(index) {
+            state.tasks.splice(index, 1);
+            gainXP(25);
+            gainSparkles(15);
+            rerender();
+        }
+
+        function gainXP(amount) {
+            state.xp += amount;
+            if (state.xp >= state.xpToNextLevel) {
+                levelUp();
+            }
+        }
+
+        function levelUp() {
+            state.level++;
+            state.xp = state.xp - state.xpToNextLevel; // Carry over extra XP
+            state.xpToNextLevel = Math.floor(state.xpToNextLevel * 1.5);
+            gainSparkles(50); // Level up bonus
+            showLevelUpModal();
+        }
+
+        function gainSparkles(amount) {
+            state.sparklePoints += amount;
+        }
+
+        function showLevelUpModal() {
+            document.getElementById('new-level').textContent = state.level;
+            levelUpModal.classList.remove('opacity-0', 'pointer-events-none');
+            levelUpModal.querySelector('div').classList.remove('scale-95');
+        }
+
+        window.closeModal = function() {
+            levelUpModal.classList.add('opacity-0', 'pointer-events-none');
+            levelUpModal.querySelector('div').classList.add('scale-95');
+        }
+
+        // --- Shop Functions ---
+        window.showTab = function(tabName) {
+            document.getElementById('tasks-content').classList.toggle('hidden', tabName !== 'tasks');
+            document.getElementById('shop-content').classList.toggle('hidden', tabName !== 'shop');
+            document.getElementById('tab-tasks').classList.toggle('active', tabName === 'tasks');
+            document.getElementById('tab-shop').classList.toggle('active', tabName === 'shop');
+        }
+
+        function renderShop() {
+            const shopContainer = document.getElementById('shop-items');
+            shopContainer.innerHTML = '';
+            SHOP_ITEMS.forEach(item => {
+                if(item.price === 0) return; // Don't show default items
+                
+                const isOwned = state.ownedItems.includes(item.id);
+                const isEquipped = item.type === 'color' ? state.customizations.bodyColor === item.value : state.customizations.wingStyle === item.value;
+
+                let buttonHtml;
+                if (isEquipped) {
+                    buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-slate-300 text-slate-500 cursor-not-allowed text-sm">Equipped</button>`;
+                } else if (isOwned) {
+                    buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm" onclick="equipItem('${item.id}')">Equip</button>`;
+                } else {
+                    buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm" onclick="buyItem('${item.id}')">Buy (✨ ${item.price})</button>`;
+                }
+
+                const itemCard = document.createElement('div');
+                itemCard.className = 'border border-slate-200 rounded-lg p-2 text-center';
+                itemCard.innerHTML = `
+                    <div class="h-16 w-full rounded-md flex items-center justify-center" style="background-color: ${item.type === 'color' ? item.value : '#f1f5f9'};">
+                        ${item.type === 'wings' ? `<svg viewBox="0 0 200 200" class="h-14">${WING_STYLES[item.value]}</svg>` : ''}
+                    </div>
+                    <p class="font-bold text-sm mt-2">${item.name}</p>
+                    ${buttonHtml}
+                `;
+                shopContainer.appendChild(itemCard);
+            });
+        }
+
+        window.buyItem = function(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (state.sparklePoints >= item.price) {
+                state.sparklePoints -= item.price;
+                state.ownedItems.push(item.id);
+                equipItem(itemId); // Automatically equip after buying
+            } else {
+                alert("Not enough Sparkle Points!");
+            }
+        }
+
+        window.equipItem = function(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (item.type === 'color') {
+                state.customizations.bodyColor = item.value;
+            } else if (item.type === 'wings') {
+                state.customizations.wingStyle = item.value;
+            }
+            rerender();
+            renderShop(); // Re-render shop to update buttons
+        }
 
         // --- Initialization ---
         function init() {
-            loadState();
-            rerender();
-             // A simple passive drain on sparkle points over time to encourage engagement
-            setInterval(() => {
-                if (state.tasks.length > 3) { // Only drain if there are pending tasks
-                    state.sparklePoints -= 1;
-                    rerender();
-                }
-            }, 30000); // every 30 seconds
+            // TinyColor library for color manipulation
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.1/tinycolor.min.js";
+            script.onload = () => {
+                loadState();
+                rerender();
+                renderShop();
+            };
+            document.head.appendChild(script);
+
+            taskForm.addEventListener('submit', addTask);
         }
 
         init();
