@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Neko</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0f9ff;
+        }
+        /* Custom animation for wings */
+        @keyframes flap {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(15deg); }
+        }
+        .wing-flap {
+            animation: flap 0.5s ease-in-out infinite;
+        }
+        /* Transition for progress bar */
+        #sparkle-progress {
+            transition: width 0.5s ease-in-out;
+        }
+        /* Task item styling */
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        /* Custom button styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            color: white;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #818cf8, #6366f1);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+         .btn-complete {
+            background-color: #22c55e; /* green-500 */
+        }
+        .btn-complete:hover {
+            background-color: #16a34a;
+        }
+        .btn-delete {
+            background-color: #ef4444; /* red-500 */
+        }
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-600">Task Neko</h1>
+            <p class="text-slate-500 mt-2">Complete tasks to make your Neko happy and sparkly!</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Panel: The Pet -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center">
+                <div id="pet-container" class="w-64 h-64 md:w-80 md:h-80 relative">
+                    <!-- The SVG for the pet is drawn here -->
+                    <svg id="task-neko-svg" viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Wings (separate for animation) -->
+                        <g id="left-wing" style="transform-origin: 100px 100px;">
+                            <path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/>
+                            <circle cx="70" cy="90" r="5" fill="#fde047"/>
+                            <circle cx="50" cy="70" r="6" fill="#60a5fa"/>
+                            <circle cx="80" cy="60" r="4" fill="#f472b6"/>
+                        </g>
+                        <g id="right-wing" style="transform-origin: 100px 100px;">
+                             <path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/>
+                             <circle cx="130" cy="90" r="5" fill="#fde047"/>
+                             <circle cx="150" cy="70" r="6" fill="#60a5fa"/>
+                             <circle cx="120" cy="60" r="4" fill="#f472b6"/>
+                        </g>
+                        <!-- Body -->
+                        <path d="M70,100 a 30,40 0 1,1 60,0 v 30 a 30,30 0 0,1 -60,0 z" fill="#c4b5fd"/>
+                        <!-- Stripes -->
+                        <path d="M75,120 Q 100,125 125,120" stroke="#a78bfa" stroke-width="6" fill="none" />
+                        <path d="M78,130 Q 100,135 122,130" stroke="#fef08a" stroke-width="6" fill="none" />
+                        <!-- Head -->
+                        <circle cx="100" cy="80" r="30" fill="#c4b5fd"/>
+                        <path d="M90,60 C 85,50 95,50 90,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
+                        <path d="M110,60 C 105,50 115,50 110,60" fill="#a78bfa" stroke="#a78bfa" stroke-width="2" />
+                        <!-- Face -->
+                        <circle cx="90" cy="80" r="4" fill="black"/>
+                        <circle cx="110" cy="80" r="4" fill="black"/>
+                        <path d="M95,90 Q 100,95 105,90" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                        <path d="M98,95 C 98,92 102,92 102,95 L 100,100 Z" fill="#f08080"/>
+                        <!-- Paws -->
+                        <circle cx="70" cy="115" r="8" fill="#ddd6fe"/>
+                        <circle cx="130" cy="115" r="8" fill="#ddd6fe"/>
+                        <!-- Tail -->
+                        <path d="M100,160 Q 120,170 130,150 Q 140,130 110,140 Q 80,150 90,170" stroke="#a78bfa" stroke-width="4" fill="none" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="w-full mt-4 text-center">
+                    <p id="pet-status" class="font-bold text-lg text-indigo-500 mb-2">Task Neko is waiting for you!</p>
+                    <div class="w-full bg-slate-200 rounded-full h-6">
+                        <div id="sparkle-progress" class="bg-gradient-to-r from-yellow-300 to-orange-400 h-6 rounded-full text-xs font-bold text-orange-800 text-center leading-6" style="width: 50%">
+                           <span id="sparkle-points">50</span>/100 Sparkle
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: The Productivity App -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">My Tasks</h2>
+                <form id="add-task-form" class="flex gap-2 mb-4">
+                    <input type="text" id="task-input" placeholder="Add a new productive task..." class="flex-grow p-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition">
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+
+                <div id="task-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <!-- Tasks will be dynamically inserted here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const taskForm = document.getElementById('add-task-form');
+        const taskInput = document.getElementById('task-input');
+        const taskList = document.getElementById('task-list');
+        const petStatus = document.getElementById('pet-status');
+        const sparkleProgress = document.getElementById('sparkle-progress');
+        const sparklePointsDisplay = document.getElementById('sparkle-points');
+        const leftWing = document.getElementById('left-wing');
+        const rightWing = document.getElementById('right-wing');
+
+        // --- Game State ---
+        let state = {
+            tasks: [],
+            sparklePoints: 50
+        };
+
+        const PET_MESSAGES = {
+            happy: "Woohoo! I'm full of energy!",
+            content: "Feeling productive and content.",
+            neutral: "Let's get some tasks done!",
+            sad: "Feeling a bit sluggish...",
+            verySad: "My wings feel heavy... I need some sparkle."
+        };
+
+        // --- Functions ---
+
+        /**
+         * Loads state from localStorage on startup.
+         */
+        function loadState() {
+            const savedState = localStorage.getItem('taskNekoState');
+            if (savedState) {
+                state = JSON.parse(savedState);
+            }
+        }
+
+        /**
+         * Saves the current state to localStorage.
+         */
+        function saveState() {
+            localStorage.setItem('taskNekoState', JSON.stringify(state));
+        }
+
+        /**
+         * Renders the tasks in the DOM.
+         */
+        function renderTasks() {
+            taskList.innerHTML = ''; // Clear current list
+            if (state.tasks.length === 0) {
+                taskList.innerHTML = `<p class="text-slate-400 text-center p-4">No tasks yet. Add one above!</p>`;
+            } else {
+                state.tasks.forEach((task, index) => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    taskElement.innerHTML = `
+                        <span class="flex-grow">${task.text}</span>
+                        <div class="flex gap-2 ml-2">
+                            <button class="btn btn-sm btn-complete" onclick="completeTask(${index})">✓</button>
+                            <button class="btn btn-sm btn-delete" onclick="deleteTask(${index})">✗</button>
+                        </div>
+                    `;
+                    taskList.appendChild(taskElement);
+                });
+            }
+        }
+
+        /**
+         * Updates the pet's appearance and status message based on sparkle points.
+         */
+        function updatePetState() {
+            // Clamp points between 0 and 100
+            state.sparklePoints = Math.max(0, Math.min(100, state.sparklePoints));
+            
+            sparklePointsDisplay.textContent = state.sparklePoints;
+            sparkleProgress.style.width = `${state.sparklePoints}%`;
+
+            let statusMessage = PET_MESSAGES.neutral;
+            leftWing.classList.remove('wing-flap');
+            rightWing.classList.remove('wing-flap');
+            document.getElementById('task-neko-svg').style.transform = 'translateY(0)';
+
+
+            if (state.sparklePoints >= 80) {
+                statusMessage = PET_MESSAGES.happy;
+                leftWing.classList.add('wing-flap');
+                rightWing.classList.add('wing-flap');
+                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
+                sparkleProgress.classList.add('bg-gradient-to-r', 'from-green-400', 'to-teal-400');
+            } else if (state.sparklePoints >= 50) {
+                statusMessage = PET_MESSAGES.content;
+                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
+                sparkleProgress.classList.remove('bg-gradient-to-r', 'from-green-400', 'to-teal-400');
+                sparkleProgress.classList.add('bg-gradient-to-r', 'from-yellow-300', 'to-orange-400');
+            } else if (state.sparklePoints >= 20) {
+                statusMessage = PET_MESSAGES.sad;
+                sparkleProgress.classList.add('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
+            } else {
+                statusMessage = PET_MESSAGES.verySad;
+                sparkleProgress.classList.add('bg-gradient-to-r', 'from-red-400', 'to-orange-400');
+                document.getElementById('task-neko-svg').style.transform = 'translateY(10px)';
+            }
+
+            petStatus.textContent = statusMessage;
+        }
+
+        /**
+         * Adds a new task.
+         */
+        function addTask(event) {
+            event.preventDefault();
+            const taskText = taskInput.value.trim();
+            if (taskText === '') {
+                alert("Please enter a task!"); // You can replace this with a nicer modal
+                return;
+            }
+            state.tasks.push({ text: taskText, completed: false });
+            taskInput.value = '';
+
+            // Adding a task slightly decreases sparkle, encouraging completion.
+            state.sparklePoints -= 2;
+
+            rerender();
+        }
+
+        /**
+         * Marks a task as complete.
+         */
+        window.completeTask = function(index) {
+            state.tasks.splice(index, 1); // Remove task from array
+            state.sparklePoints += 15; // Reward user
+            rerender();
+        }
+
+        /**
+         * Deletes a task.
+         */
+        window.deleteTask = function(index) {
+            state.tasks.splice(index, 1);
+            // No penalty or reward for just deleting.
+            rerender();
+        }
+        
+        /**
+         * Central function to update everything.
+         */
+        function rerender() {
+            renderTasks();
+            updatePetState();
+            saveState();
+        }
+
+
+        // --- Event Listeners ---
+        taskForm.addEventListener('submit', addTask);
+
+        // --- Initialization ---
+        function init() {
+            loadState();
+            rerender();
+             // A simple passive drain on sparkle points over time to encourage engagement
+            setInterval(() => {
+                if (state.tasks.length > 3) { // Only drain if there are pending tasks
+                    state.sparklePoints -= 1;
+                    rerender();
+                }
+            }, 30000); // every 30 seconds
+        }
+
+        init();
+    </script>
+</body>
+</html>
