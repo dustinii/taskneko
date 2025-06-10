@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Neko v2.1</title>
+    <title>Task Neko v2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,12 +164,7 @@
             ownedItems: ['default-color', 'default-wings']
         };
 
-        const WING_STYLES = {
-            'default': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`, // SVG content omitted for brevity
-            'butterfly': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`,
-            'dragon': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`
-        };
-        // Fill in SVG content
+        const WING_STYLES = {};
         WING_STYLES['default'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="70" cy="90" r="5" fill="#fde047"/><circle cx="50" cy="70" r="6" fill="#60a5fa"/><circle cx="80" cy="60" r="4" fill="#f472b6"/><path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="130" cy="90" r="5" fill="#fde047"/><circle cx="150" cy="70" r="6" fill="#60a5fa"/><circle cx="120" cy="60" r="4" fill="#f472b6"/></g>`;
         WING_STYLES['butterfly'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,85 a 40,40 0 0 1 -50,-35 a 30,30 0 0 1 50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/><path d="M105,85 a 40,40 0 0 0 50,-35 a 30,30 0 0 0 -50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/></g>`;
         WING_STYLES['dragon'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,85 L 50,50 L 80,90 L 50,90 L 95,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/><path d="M105,85 L 150,50 L 120,90 L 150,90 L 105,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/></g>`;
@@ -185,27 +180,17 @@
             { id: 'dragon-wings', name: 'Dragon Wings', price: 500, type: 'wings', value: 'dragon' },
         ];
 
-
         // --- Functions ---
 
-        /**
-         * Robustly loads state from localStorage, merging with defaults.
-         */
         function loadState() {
             const savedStateJSON = localStorage.getItem('taskNekoStateV2');
             if (savedStateJSON) {
                 try {
                     const loadedState = JSON.parse(savedStateJSON);
-                    // Merge loaded state with default state to prevent errors
-                    // if the state structure changes between versions.
                     const newState = {
                         ...state,
                         ...loadedState,
-                        customizations: {
-                            ...state.customizations,
-                            ...(loadedState.customizations || {}),
-                        },
-                        // Crucially, ensure ownedItems is loaded correctly and is an array.
+                        customizations: { ...state.customizations, ...(loadedState.customizations || {}), },
                         ownedItems: Array.isArray(loadedState.ownedItems) ? loadedState.ownedItems : state.ownedItems,
                     };
                     state = newState;
@@ -220,10 +205,12 @@
             localStorage.setItem('taskNekoStateV2', JSON.stringify(state));
         }
         
-        function rerender() {
+        // Master update function to keep everything in sync
+        function updateAll() {
             renderTasks();
             renderPet();
             renderUI();
+            renderShop();
             saveState();
         }
 
@@ -236,12 +223,7 @@
             state.tasks.forEach((task, index) => {
                 const taskElement = document.createElement('div');
                 taskElement.className = 'p-3 bg-slate-50 rounded-lg flex justify-between items-center';
-                taskElement.innerHTML = `
-                    <span>${task.text}</span>
-                    <div>
-                        <button class="btn btn-sm bg-green-500 hover:bg-green-600" onclick="completeTask(${index})">✓</button>
-                    </div>
-                `;
+                taskElement.innerHTML = `<span>${task.text}</span><div><button class="btn btn-sm bg-green-500 hover:bg-green-600" onclick="completeTask(${index})">✓</button></div>`;
                 taskList.appendChild(taskElement);
             });
         }
@@ -281,14 +263,14 @@
             };
             state.tasks.push({ text: taskText });
             taskInput.value = '';
-            rerender();
+            updateAll();
         }
 
         window.completeTask = function(index) {
             state.tasks.splice(index, 1);
             gainXP(25);
             gainSparkles(15);
-            rerender();
+            updateAll();
         }
 
         function gainXP(amount) {
@@ -356,7 +338,7 @@
             if (state.sparklePoints >= item.price) {
                 state.sparklePoints -= item.price;
                 state.ownedItems.push(item.id);
-                equipItem(itemId);
+                equipItem(itemId); // Equip the item right after buying
                 showNotification("Purchase successful!", false);
             } else {
                 showNotification("Not enough Sparkle Points!");
@@ -365,13 +347,14 @@
 
         window.equipItem = function(itemId) {
             const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item || !state.ownedItems.includes(itemId)) return; // Security check
+
             if (item.type === 'color') {
                 state.customizations.bodyColor = item.value;
             } else if (item.type === 'wings') {
                 state.customizations.wingStyle = item.value;
             }
-            rerender();
-            renderShop();
+            updateAll();
         }
 
         function init() {
@@ -379,8 +362,7 @@
             script.src = "https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.1/tinycolor.min.js";
             script.onload = () => {
                 loadState();
-                rerender();
-                renderShop();
+                updateAll();
             };
             document.head.appendChild(script);
             taskForm.addEventListener('submit', addTask);
