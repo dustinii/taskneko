@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Neko v2</title>
+    <title>Task Neko v2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,9 +46,9 @@
         .tab-button:not(.active) {
             background-color: #e0e7ff; color: #4338ca;
         }
-        /* Custom modal for level up */
-        #level-up-modal {
-            transition: opacity 0.3s ease-in-out;
+        /* Custom modal/notification styles */
+        #level-up-modal, #notification {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -124,12 +124,17 @@
 
     <!-- Level Up Modal -->
     <div id="level-up-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 text-center transform scale-95 transition-transform duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 text-center transform scale-95">
             <h2 class="text-3xl font-bold text-yellow-500">LEVEL UP!</h2>
             <p class="text-slate-600 mt-2">Your Neko reached <span id="new-level" class="font-bold text-indigo-600"></span>!</p>
             <p class="mt-4">You earned a bonus <span class="font-bold text-amber-500">✨ 50 Sparkle Points!</span></p>
             <button onclick="closeModal()" class="btn btn-primary mt-6">Awesome!</button>
         </div>
+    </div>
+    
+    <!-- Generic Notification -->
+    <div id="notification" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg transform translate-x-[110%]">
+        <!-- Message inserted here -->
     </div>
 
 
@@ -143,8 +148,9 @@
         const xpProgress = document.getElementById('xp-progress');
         const xpDisplay = document.getElementById('xp-display');
         const levelUpModal = document.getElementById('level-up-modal');
+        const notification = document.getElementById('notification');
 
-        // --- Game State ---
+        // --- Game State (Default) ---
         let state = {
             tasks: [],
             level: 1,
@@ -159,19 +165,15 @@
         };
 
         const WING_STYLES = {
-            'default': `<g id="default-wings" class="wing-flap" style="transform-origin: 100px 90px;">
-                            <path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="70" cy="90" r="5" fill="#fde047"/><circle cx="50" cy="70" r="6" fill="#60a5fa"/><circle cx="80" cy="60" r="4" fill="#f472b6"/>
-                            <path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="130" cy="90" r="5" fill="#fde047"/><circle cx="150" cy="70" r="6" fill="#60a5fa"/><circle cx="120" cy="60" r="4" fill="#f472b6"/>
-                        </g>`,
-            'butterfly': `<g id="butterfly-wings" class="wing-flap" style="transform-origin: 100px 90px;">
-                            <path d="M95,85 a 40,40 0 0 1 -50,-35 a 30,30 0 0 1 50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
-                            <path d="M105,85 a 40,40 0 0 0 50,-35 a 30,30 0 0 0 -50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
-                        </g>`,
-            'dragon': `<g id="dragon-wings" class="wing-flap" style="transform-origin: 100px 90px;">
-                           <path d="M95,85 L 50,50 L 80,90 L 50,90 L 95,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/>
-                           <path d="M105,85 L 150,50 L 120,90 L 150,90 L 105,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/>
-                       </g>`
+            'default': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`, // SVG content omitted for brevity
+            'butterfly': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`,
+            'dragon': `<g class="wing-flap" style="transform-origin: 100px 90px;">...</g>`
         };
+        // Fill in SVG content
+        WING_STYLES['default'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,80 C 40,30 20,100 80,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="70" cy="90" r="5" fill="#fde047"/><circle cx="50" cy="70" r="6" fill="#60a5fa"/><circle cx="80" cy="60" r="4" fill="#f472b6"/><path d="M105,80 C 160,30 180,100 120,115 Z" fill="#a7f3d0" stroke="#22c55e" stroke-width="2"/><circle cx="130" cy="90" r="5" fill="#fde047"/><circle cx="150" cy="70" r="6" fill="#60a5fa"/><circle cx="120" cy="60" r="4" fill="#f472b6"/></g>`;
+        WING_STYLES['butterfly'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,85 a 40,40 0 0 1 -50,-35 a 30,30 0 0 1 50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/><path d="M105,85 a 40,40 0 0 0 50,-35 a 30,30 0 0 0 -50,20z" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/></g>`;
+        WING_STYLES['dragon'] = `<g class="wing-flap" style="transform-origin: 100px 90px;"><path d="M95,85 L 50,50 L 80,90 L 50,90 L 95,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/><path d="M105,85 L 150,50 L 120,90 L 150,90 L 105,100z" fill="#f87171" stroke="#b91c1c" stroke-width="2"/></g>`;
+
 
         const SHOP_ITEMS = [
             { id: 'default-color', name: 'Default Purple', price: 0, type: 'color', value: '#c4b5fd' },
@@ -186,10 +188,31 @@
 
         // --- Functions ---
 
+        /**
+         * Robustly loads state from localStorage, merging with defaults.
+         */
         function loadState() {
-            const savedState = localStorage.getItem('taskNekoStateV2');
-            if (savedState) {
-                state = JSON.parse(savedState);
+            const savedStateJSON = localStorage.getItem('taskNekoStateV2');
+            if (savedStateJSON) {
+                try {
+                    const loadedState = JSON.parse(savedStateJSON);
+                    // Merge loaded state with default state to prevent errors
+                    // if the state structure changes between versions.
+                    const newState = {
+                        ...state,
+                        ...loadedState,
+                        customizations: {
+                            ...state.customizations,
+                            ...(loadedState.customizations || {}),
+                        },
+                        // Crucially, ensure ownedItems is loaded correctly and is an array.
+                        ownedItems: Array.isArray(loadedState.ownedItems) ? loadedState.ownedItems : state.ownedItems,
+                    };
+                    state = newState;
+                } catch (e) {
+                    console.error("Failed to load state, starting fresh.", e);
+                    localStorage.removeItem('taskNekoStateV2');
+                }
             }
         }
 
@@ -225,13 +248,11 @@
         
         function renderPet() {
             const { bodyColor, wingStyle } = state.customizations;
-            // Apply body color
             document.getElementById('neko-body').style.fill = bodyColor;
             document.getElementById('neko-head').style.fill = bodyColor;
-            document.getElementById('neko-tail').style.stroke = bodyColor;
+            document.getElementById('neko-tail').style.stroke = tinycolor(bodyColor).darken(15).toString();
             document.getElementById('neko-paw-1').style.fill = tinycolor(bodyColor).lighten(10).toString();
             document.getElementById('neko-paw-2').style.fill = tinycolor(bodyColor).lighten(10).toString();
-            // Apply wing style
             document.getElementById('wings-container').innerHTML = WING_STYLES[wingStyle] || WING_STYLES['default'];
         }
 
@@ -241,11 +262,23 @@
             xpDisplay.textContent = `${state.xp}/${state.xpToNextLevel}`;
             xpProgress.style.width = `${(state.xp / state.xpToNextLevel) * 100}%`;
         }
+        
+        function showNotification(message, isError = true) {
+            notification.textContent = message;
+            notification.style.backgroundColor = isError ? '#ef4444' : '#22c55e';
+            notification.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                notification.style.transform = 'translateX(calc(100% + 1.25rem))';
+            }, 3000);
+        }
 
         function addTask(event) {
             event.preventDefault();
             const taskText = taskInput.value.trim();
-            if (taskText === '') return;
+            if (taskText === '') {
+                showNotification("Please enter a task description.");
+                return;
+            };
             state.tasks.push({ text: taskText });
             taskInput.value = '';
             rerender();
@@ -267,9 +300,9 @@
 
         function levelUp() {
             state.level++;
-            state.xp = state.xp - state.xpToNextLevel; // Carry over extra XP
+            state.xp -= state.xpToNextLevel;
             state.xpToNextLevel = Math.floor(state.xpToNextLevel * 1.5);
-            gainSparkles(50); // Level up bonus
+            gainSparkles(50);
             showLevelUpModal();
         }
 
@@ -288,7 +321,6 @@
             levelUpModal.querySelector('div').classList.add('scale-95');
         }
 
-        // --- Shop Functions ---
         window.showTab = function(tabName) {
             document.getElementById('tasks-content').classList.toggle('hidden', tabName !== 'tasks');
             document.getElementById('shop-content').classList.toggle('hidden', tabName !== 'shop');
@@ -300,29 +332,21 @@
             const shopContainer = document.getElementById('shop-items');
             shopContainer.innerHTML = '';
             SHOP_ITEMS.forEach(item => {
-                if(item.price === 0) return; // Don't show default items
-                
+                if(item.price === 0) return;
                 const isOwned = state.ownedItems.includes(item.id);
                 const isEquipped = item.type === 'color' ? state.customizations.bodyColor === item.value : state.customizations.wingStyle === item.value;
-
                 let buttonHtml;
                 if (isEquipped) {
                     buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-slate-300 text-slate-500 cursor-not-allowed text-sm">Equipped</button>`;
                 } else if (isOwned) {
                     buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm" onclick="equipItem('${item.id}')">Equip</button>`;
                 } else {
-                    buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm" onclick="buyItem('${item.id}')">Buy (✨ ${item.price})</button>`;
+                    const canAfford = state.sparklePoints >= item.price;
+                    buttonHtml = `<button class="w-full mt-2 p-2 rounded-lg ${canAfford ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'} text-white text-sm" ${canAfford ? `onclick="buyItem('${item.id}')"` : 'disabled'}>Buy (✨ ${item.price})</button>`;
                 }
-
                 const itemCard = document.createElement('div');
                 itemCard.className = 'border border-slate-200 rounded-lg p-2 text-center';
-                itemCard.innerHTML = `
-                    <div class="h-16 w-full rounded-md flex items-center justify-center" style="background-color: ${item.type === 'color' ? item.value : '#f1f5f9'};">
-                        ${item.type === 'wings' ? `<svg viewBox="0 0 200 200" class="h-14">${WING_STYLES[item.value]}</svg>` : ''}
-                    </div>
-                    <p class="font-bold text-sm mt-2">${item.name}</p>
-                    ${buttonHtml}
-                `;
+                itemCard.innerHTML = `<div class="h-16 w-full rounded-md flex items-center justify-center" style="background-color: ${item.type === 'color' ? item.value : '#f1f5f9'};">${item.type === 'wings' ? `<svg viewBox="0 0 200 200" class="h-14">${WING_STYLES[item.value]}</svg>` : ''}</div><p class="font-bold text-sm mt-2">${item.name}</p>${buttonHtml}`;
                 shopContainer.appendChild(itemCard);
             });
         }
@@ -332,9 +356,10 @@
             if (state.sparklePoints >= item.price) {
                 state.sparklePoints -= item.price;
                 state.ownedItems.push(item.id);
-                equipItem(itemId); // Automatically equip after buying
+                equipItem(itemId);
+                showNotification("Purchase successful!", false);
             } else {
-                alert("Not enough Sparkle Points!");
+                showNotification("Not enough Sparkle Points!");
             }
         }
 
@@ -346,12 +371,10 @@
                 state.customizations.wingStyle = item.value;
             }
             rerender();
-            renderShop(); // Re-render shop to update buttons
+            renderShop();
         }
 
-        // --- Initialization ---
         function init() {
-            // TinyColor library for color manipulation
             const script = document.createElement('script');
             script.src = "https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.1/tinycolor.min.js";
             script.onload = () => {
@@ -360,7 +383,6 @@
                 renderShop();
             };
             document.head.appendChild(script);
-
             taskForm.addEventListener('submit', addTask);
         }
 
